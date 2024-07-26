@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulación de Agua 2D</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const resolution = 5; // Tamaño de cada celda
+        const nx = Math.floor(width / resolution);
+        const ny = Math.floor(height / resolution);
+        const dt = 0.01;
+        const viscosity = 0.01; // Viscosidad del fluido
+        const gravity = 9.8; // Fuerza de gravedad
+
+        let u = Array.from({ length: nx }, () => Array(ny).fill(0));
+        let v = Array.from({ length: nx }, () => Array(ny).fill(0));
+        let u_prev = Array.from({ length: nx }, () => Array(ny).fill(0));
+        let v_prev = Array.from({ length: nx }, () => Array(ny).fill(0));
+        let dens = Array.from({ length: nx }, () => Array(ny).fill(0));
+        let dens_prev = Array.from({ length: nx }, () => Array(ny).fill(0));
+
+        function advect(b, d, d0, u, v, dt) {
+            let dt0x = dt * (nx - 2);
+            let dt0y = dt * (ny - 2);
+            for (let i = 1; i < nx - 1; i++) {
+                for (let j = 1; j < ny - 1; j++) {
+                    let x = i - dt0x * u[i][j];
+                    let y = j - dt0y * v[i][j];
+                    x = Math.max(0.5, Math.min(nx + 0.5, x));
+                    y = Math.max(0.5, Math.min(ny + 0.5, y));
+                    let i0 = Math.floor(x);
+                    let i1 = i0 + 1;
+                    let j0 = Math.floor(y);
+                    let j1 = j0 + 1;
+                    let s1 = x - i0;
+                    let s0 = 1 - s1;
+                    let t1 = y - j0;
+                    let t0 = 1 - t1;
+                    d[i][j] = s0 * (t0 * d0[i0][j0] + t1 * d0[i0][j1]) +
+                              s1 * (t0 * d0[i1][j0] + t1 * d0[i1][j1]);
+                }
+            }
+        }
+
+        function diffuse(b, x, x0, diff, dt) {
+            let a = dt * diff * (nx - 2) * (ny - 2);
+            lin_solve(b, x, x0, a, 1 + 4 * a);
+        }
+
+        function project(u, v, p, div) {
+            let h = 1.0 / nx;
+            for (let i = 1; i < nx - 1; i++) {
+                for (let j = 1; j < ny - 1; j++) {
+                    div[i][j] = -0.5 * h * (u[i + 1][j] - u[i - 1][j] +
+                                            v[i][j + 1] - v[i][j - 1]);
+                    p[i][j] = 0;
+                }
+            }
+            lin_solve(0, p, div, 1, 4);
+            for (let i = 1; i < nx - 1; i++) {
+                for (let j = 1; j < ny - 1; j++) {
+                    u[i][j] -= 0.5 * (p[i + 1][j] - p[i - 1][j]) / h;
+                    v[i][j] -= 0.5 * (p[i][j + 1] - p[i][j - 1]) / h;
+                }
+            }
+        }
+
+        function lin_solve(b, x, x0, a, c) {
+            for (let k = 0; k < 20; k++) {
+                for (let i = 1; i < nx - 1; i++) {
+                    for (let j = 1; j < ny - 1; j++) {
+                        x[i][j] = (x0[i][j] + a * (x[i - 1][j] + x[i + 1][j] +
+                                                   x[i][j - 1] + x[i][j + 1])) / c;
+                    }
+                }
+                set_bnd(b, x);
+            }
+        }
+
+        function set_bnd(b, x) {
+            for (let i = 1; i < nx - 1; i++) {
+                x[i][0] = b === 2 ? -x[i][1] : x[i][1];
+                x[i][ny - 1] = b === 2 ? -x[i][ny - 2] : x[i][ny - 2];
+            }
+            for (let j = 1; j < ny - 1; j++) {
+                x[0][j] = b === 1 ? -x[1][j] : x[1][j];
+                x[nx - 1][j] = b === 1 ? -x[nx - 2][j] : x[nx - 2][j];
+            }
+            x[0][0] = 0.5 * (x[1][0] + x[0][1]);
+            x[0][ny - 1] = 0.5 * (x[1][ny - 1] + x[0][ny - 2]);
+            x[nx - 1][0] = 0.5 * (x[nx - 2][0] + x[nx - 1][1]);
+            x[nx - 1][ny - 1] = 0.5 * (x[nx - 2][ny - 1] + x[nx - 1][ny - 2]);
+        }
+
+        function add_source(x, s, dt) {
+            for (let i = 0; i < x.length; i++) {
+                for (let j = 0; j < x[0].length; j++) {
+                    x[i][j] += dt * s[i][j];
+                }
+            }
+        }
+
+        function step() {
+            // Aplicar la gravedad
+            for (let i = 0; i < nx; i++) {
+                for (let j = 1; j < ny; j++) {
+                    v[i][j] += gravity * dt; // Aumentar la velocidad vertical debido a la gravedad
+                }
+            }
+
+            add_source(u, u_prev, dt);
+            add_source(v, v_prev, dt);
+            add_source(dens, dens_prev, dt);
+
+
+            let diff = 0.001;
+            diffuse(1, u_prev, u, viscosity, dt);
+            diffuse(2, v_prev, v, viscosity, dt);
+            project(u_prev, v_prev, u, v);
+
+            advect(1, u, u_prev, u_prev, v_prev, dt);
+            advect(2, v, v_prev, u_prev, v_prev, dt);
+            project(u, v, u_prev, v_prev);
+
+            diffuse(0, dens_prev, dens, diff, dt);
+            advect(0, dens, dens_prev, u, v, dt);
+
+            // Dibujar la densidad
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < nx; i++) {
+                for (let j = 0; j < ny; j++) {
+                    let x = i * resolution;
+                    let y = j * resolution;
+                    let color = Math.min(255, dens[i][j] * 255);
+                    ctx.fillStyle = `rgb(0, ${color}, ${color})`;
+                    ctx.fillRect(x, y, resolution, resolution);
+                }
+            }
+
+            // Intercambiar buffers
+            [u, u_prev] = [u_prev, u];
+            [v, v_prev] = [v_prev, v];
+            [dens, dens_prev] = [dens_prev, dens];
+        }
+
+        function mainLoop() {
+            step();
+            requestAnimationFrame(mainLoop);
+        }
+
+        mainLoop();
+
+        canvas.addEventListener('mousedown', (event) => {
+            let x = Math.floor(event.offsetX / resolution);
+            let y = Math.floor(event.offsetY / resolution);
+            dens[x][y] = 10; // Agregar densidad de manera más controlada
+        });
+    </script>
+</body>
+</html>
