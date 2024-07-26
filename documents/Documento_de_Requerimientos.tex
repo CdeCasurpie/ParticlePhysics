@@ -1,0 +1,125 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+
+\title{Particle Physics: Particle Simulator. Requirements Document}
+\author{César Aarón Perales Rosales}
+\date{July 2024}
+
+\begin{document}
+
+\maketitle
+
+% new page
+\newpage
+
+% table of contents
+\tableofcontents
+
+% new page
+\newpage
+
+% sections
+\section{Introduction}
+The purpose of this document is to describe the requirements of the "Particle Simulator" project. This document will describe the objectives, functionalities, and requirements of the project.
+
+\section{Proposal}
+
+\subsection{Description}
+
+The project consists of creating a particle simulator, where there are different types of particles such as water, fire, earth, air, etc. Each of these particles will have different behaviors; some will have a higher density than others, some will evaporate upon contact with fire, others will freeze upon contact with water, etc. The objective of the project is to simulate the behavior of these particles in a 2D environment.
+
+\subsection{Objectives}
+
+\begin{itemize}
+    \item Create a 2D particle simulator.
+    \item Implement different types of particles with different behaviors.
+    \item Implement interactions between particles.
+\end{itemize}
+
+\section{Requirements}
+
+\subsection{Functional Requirements}
+
+\subsubsection{Must have}
+
+\begin{itemize}
+    \item The simulator must have a 2D environment.
+    \item The simulator must be pixelated, meaning each particle must occupy a pixel on the screen or a square in the grid.
+    \item The 2D simulator must have a menu to choose which particles to insert into the scene.
+    \item The simulator must include the following types of particles:
+    \begin{itemize}
+        \item Water
+        \item Fire
+        \item Earth
+        \item Air
+    \end{itemize}
+    \item The particles must be affected by gravity.
+    \item The particles must simulate the following physical behaviors:
+    \begin{itemize}
+        \item They must fall to the ground.
+        \item They must be able to bounce depending on the material.
+        \item They must have acceleration.
+        \item They must have a maximum speed.
+        \item They must have a density.
+        \item They must have a temperature.
+    \end{itemize}
+    \item The particles must have a different color depending on their type.
+    \item The particles must interact with each other, so they cannot pass through each other.
+    \item The particles must have different behaviors when interacting with other particles depending on their type.
+    \item The simulator must have a collision system.
+\end{itemize}
+
+\subsubsection{Nice to have}
+
+\begin{itemize}
+    \item There should be a way to speed up, slow down, pause, and reset the simulation.
+    \item The simulation should be savable and loadable in a simple format like JSON or txt.
+    \item The gravity of the simulation should be changeable.
+    \item External forces should be applicable to the particles. There should be two types of forces:
+    \begin{itemize}
+        \item Constant directional forces: Forces applied in a direction and in a determined area.
+        \item Point directional forces: Forces applied once from a determined point in a direction.
+        \item Expansive forces: Forces applied in a determined area and expanding in all directions. They can be constant or point forces.
+    \end{itemize}
+    \item There should be particle emitters, i.e., objects that generate particles of a specific type.
+    \item A menu should be available to change the characteristics of a particle type.
+    \item The particle types should have states relative to their temperature. There should be three states, and they should change from one to another depending on the temperature.
+\end{itemize}
+
+\subsubsection{Out of scope}
+
+\begin{itemize}
+    \item The simulator should allow the management of "layers," meaning running multiple simulations one on top of another.
+    \item The "layers" should be more or less opaque, allowing the simulations on lower layers to be visible.
+    \item The "layers" should be savable and loadable in a simple format like JSON or txt.
+    \item New types of particles should be creatable, with the respective configuration of their properties.
+    \item The particle types should be exportable and savable in a simple format like JSON or txt.
+    \item The particle types should be importable and loadable in a simple format like JSON or txt.
+    \item Temperature should be applicable to the particles in the following ways:
+    \begin{itemize}
+        \item Constant heat emitter: An emitter that generates a determined heat in a determined area.
+        \item Point heat emitter: An emitter that generates heat once in a determined area.
+    \end{itemize}
+    \item The simulator should have air filters, meaning that although the simulation does not simulate air, it should show the air temperature in the simulation and how it is transferring to other particles.
+    \item The ambient temperature in the simulation should be changeable.
+\end{itemize}
+
+\subsection{Non-Functional Requirements}
+
+\begin{itemize}
+    \item The simulator must be developed in C++ and OpenGL.
+    \item The simulator must run at a rate of at least 30 FPS.
+    \item The simulator must be capable of simulating at least 3000 particles on the screen.
+    \item The simulator must be capable of simulating at least 1000 interactive particles on the screen.
+    \item The simulator must be capable of simulating at least 100 particle emitters on the screen.
+    \item The simulator's startup time must not exceed 5 seconds.
+    \item The simulation loading time must not exceed 5 seconds.
+    \item The simulation saving time must not exceed 10 seconds.
+\end{itemize}
+
+\section{Conclusions}
+
+The "Particle Simulator" project is an ambitious project aimed at simulating the behavior of different types of particles in a 2D environment. The project has a set of functional and non-functional requirements that will help meet the proposed objectives. The project will be developed in C++ and OpenGL, and it is expected to meet the minimum requirements established in this document.
+
+\end{document}
